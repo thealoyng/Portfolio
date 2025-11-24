@@ -318,6 +318,29 @@
       max-width: none;
       max-height: none;
     }
+    
+    /* Mobile maximize mode */
+    .portfolio-shell.maximized {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      background: var(--bg);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .portfolio-shell.maximized #portfolio {
+      width: 98vw !important;
+      height: 90vh !important;
+      max-width: none !important;
+      max-height: none !important;
+    }
 
     .note { color: var(--muted); font-size: 13px; text-align: center; }
 
@@ -620,30 +643,56 @@
         // Fullscreen functionality
         const fullscreenBtn = document.getElementById('fullscreen');
         const portfolioShell = document.querySelector('.portfolio-shell');
+        let isMaximized = false;
         
         function toggleFullscreen() {
-          if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
-            // Enter fullscreen
-            if (portfolioShell.requestFullscreen) {
-              portfolioShell.requestFullscreen();
-            } else if (portfolioShell.webkitRequestFullscreen) {
-              portfolioShell.webkitRequestFullscreen();
-            } else if (portfolioShell.mozRequestFullScreen) {
-              portfolioShell.mozRequestFullScreen();
-            } else if (portfolioShell.msRequestFullscreen) {
-              portfolioShell.msRequestFullscreen();
+          // Check if browser supports fullscreen API
+          const supportsFullscreen = document.fullscreenEnabled || 
+                                    document.webkitFullscreenEnabled || 
+                                    document.mozFullScreenEnabled;
+          
+          if (supportsFullscreen && window.innerWidth > 768) {
+            // Desktop: use native fullscreen API
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
+              if (portfolioShell.requestFullscreen) {
+                portfolioShell.requestFullscreen();
+              } else if (portfolioShell.webkitRequestFullscreen) {
+                portfolioShell.webkitRequestFullscreen();
+              } else if (portfolioShell.mozRequestFullScreen) {
+                portfolioShell.mozRequestFullScreen();
+              }
+            } else {
+              if (document.exitFullscreen) {
+                document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+              } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+              }
             }
           } else {
-            // Exit fullscreen
-            if (document.exitFullscreen) {
-              document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-              document.webkitExitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-              document.mozCancelFullScreen();
-            } else if (document.msExitFullscreen) {
-              document.msExitFullscreen();
+            // Mobile: use CSS maximize mode
+            isMaximized = !isMaximized;
+            if (isMaximized) {
+              portfolioShell.classList.add('maximized');
+              document.body.style.overflow = 'hidden';
+              // Recalculate portfolio size
+              const w = window.innerWidth * 0.98;
+              const h = window.innerHeight * 0.9;
+              $flip.turn('size', w, h);
+            } else {
+              portfolioShell.classList.remove('maximized');
+              document.body.style.overflow = '';
+              // Restore original size
+              const viewportWidth = window.innerWidth * 0.95;
+              const viewportHeight = window.innerHeight * 0.85;
+              const widthBasedHeight = viewportWidth * 0.707;
+              const heightBasedWidth = viewportHeight / 0.707;
+              const w = widthBasedHeight <= viewportHeight ? viewportWidth : heightBasedWidth;
+              const h = widthBasedHeight <= viewportHeight ? widthBasedHeight : viewportHeight;
+              $flip.turn('size', w, h);
             }
+            updateFullscreenIcon();
           }
         }
         
@@ -658,7 +707,9 @@
         
         function updateFullscreenIcon() {
           const icon = fullscreenBtn.querySelector('i');
-          if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+          const inFullscreen = document.fullscreenElement || document.webkitFullscreenElement || 
+                              document.mozFullScreenElement || isMaximized;
+          if (inFullscreen) {
             icon.className = 'fas fa-compress';
             fullscreenBtn.setAttribute('aria-label', 'Exit fullscreen');
           } else {
