@@ -926,6 +926,9 @@
           const $portfolio = $('#portfolio');
           const inFullscreen = isMaximized || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
           
+          // Disable turn.js temporarily to prevent flipping glitches during zoom
+          $portfolio.turn('disable', true);
+          
           if (inFullscreen && currentZoom !== 1) {
             // Add zoomed class to activate CSS rules
             portfolioShell.classList.add('zoomed');
@@ -935,11 +938,11 @@
             const portfolioWidth = $portfolio.outerWidth();
             const portfolioHeight = $portfolio.outerHeight();
             
-            // Apply CSS transform scale
+            // Apply CSS transform scale - no transition for instant response
             $portfolio.css({
               'transform': `scale(${currentZoom})`,
               'transform-origin': 'top left',
-              'transition': 'transform 0.3s ease'
+              'transition': 'none'
             });
             
             // Set up scrollable container - NO PADDING
@@ -976,15 +979,16 @@
             portfolioShell.classList.remove('zoomed');
             document.body.classList.remove('zoomed');
             
-            // Reset transform
+            // Reset transform - no transition
             $portfolio.css({
               'transform': 'scale(1)',
               'transform-origin': 'center center',
-              'transition': 'transform 0.3s ease'
+              'transition': 'none'
             });
             
             if (inFullscreen) {
-              portfolioShell.style.overflow = 'auto';
+              // When zoom is reset in fullscreen, no overflow needed
+              portfolioShell.style.overflow = 'hidden';
               portfolioShell.style.display = 'flex';
               portfolioShell.style.alignItems = 'center';
               portfolioShell.style.justifyContent = 'center';
@@ -1003,6 +1007,11 @@
               'image-rendering': 'auto'
             });
           }
+          
+          // Re-enable turn.js after a short delay
+          setTimeout(function() {
+            $portfolio.turn('disable', false);
+          }, 100);
           
           console.log('Zoom applied:', currentZoom);
         }
