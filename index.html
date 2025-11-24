@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5.0, user-scalable=yes" />
   <title>Aloysius Ng — Portfolio</title>
 
   <!-- Favicon -->
@@ -333,13 +333,23 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
     }
     
     .portfolio-shell.maximized #portfolio {
-      width: 98vw !important;
-      height: 90vh !important;
-      max-width: none !important;
-      max-height: none !important;
+      width: 95vw !important;
+      height: calc(95vw * 0.707) !important;
+      max-width: 95vw !important;
+      max-height: 85vh !important;
+    }
+    
+    @media (min-aspect-ratio: 1/1) {
+      .portfolio-shell.maximized #portfolio {
+        width: auto !important;
+        height: 85vh !important;
+        max-width: calc(85vh / 0.707) !important;
+      }
     }
 
     .note { color: var(--muted); font-size: 13px; text-align: center; }
@@ -676,9 +686,20 @@
             if (isMaximized) {
               portfolioShell.classList.add('maximized');
               document.body.style.overflow = 'hidden';
-              // Recalculate portfolio size
-              const w = window.innerWidth * 0.98;
-              const h = window.innerHeight * 0.9;
+              // Recalculate portfolio size with proper aspect ratio
+              const viewportWidth = window.innerWidth * 0.95;
+              const viewportHeight = window.innerHeight * 0.85;
+              const widthBasedHeight = viewportWidth * 0.707;
+              const heightBasedWidth = viewportHeight / 0.707;
+              
+              let w, h;
+              if (widthBasedHeight <= viewportHeight) {
+                w = viewportWidth;
+                h = widthBasedHeight;
+              } else {
+                w = heightBasedWidth;
+                h = viewportHeight;
+              }
               $flip.turn('size', w, h);
             } else {
               portfolioShell.classList.remove('maximized');
