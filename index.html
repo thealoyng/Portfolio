@@ -271,12 +271,56 @@
 
     #portfolio .page {
       background-color: #000;
-      background-size: cover;
+      background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      image-rendering: high-quality;
+      -ms-interpolation-mode: nearest-neighbor;
+    }
+    
+    /* Remove page spacing in fullscreen */
+    .portfolio-shell:-webkit-full-screen #portfolio .page,
+    .portfolio-shell:-moz-full-screen #portfolio .page,
+    .portfolio-shell:fullscreen #portfolio .page,
+    .portfolio-shell.maximized #portfolio .page {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+    
+    /* Remove shadow between pages when zoomed */
+    .portfolio-shell:-webkit-full-screen #portfolio .shadow,
+    .portfolio-shell:-moz-full-screen #portfolio .shadow,
+    .portfolio-shell:fullscreen #portfolio .shadow,
+    .portfolio-shell.maximized #portfolio .shadow {
+      display: none !important;
+    }
+    
+    /* Remove Turn.js gutter/gap between pages in fullscreen */
+    .portfolio-shell:-webkit-full-screen #portfolio .turn-page,
+    .portfolio-shell:-moz-full-screen #portfolio .turn-page,
+    .portfolio-shell:fullscreen #portfolio .turn-page,
+    .portfolio-shell.maximized #portfolio .turn-page {
+      margin: 0 !important;
+    }
+    
+    /* Ensure pages are flush together */
+    .portfolio-shell:-webkit-full-screen #portfolio .even,
+    .portfolio-shell:-moz-full-screen #portfolio .even,
+    .portfolio-shell:fullscreen #portfolio .even,
+    .portfolio-shell.maximized #portfolio .even {
+      margin-right: 0 !important;
+    }
+    
+    .portfolio-shell:-webkit-full-screen #portfolio .odd,
+    .portfolio-shell:-moz-full-screen #portfolio .odd,
+    .portfolio-shell:fullscreen #portfolio .odd,
+    .portfolio-shell.maximized #portfolio .odd {
+      margin-left: 0 !important;
     }
 
-    .flip-controls { display: flex; align-items: center; gap: 10px; }
     .icon-btn {
       inline-size: 40px; block-size: 40px; display: inline-grid; place-items: center; border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.08);
@@ -289,22 +333,68 @@
     .icon-btn:hover:not(:disabled) { 
       background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
     }
+    .portfolio-shell.maximized #portfolio,
+    .portfolio-shell:-webkit-full-screen #portfolio,
+    .portfolio-shell:-moz-full-screen #portfolio,
+    .portfolio-shell:fullscreen #portfolio {
+      cursor: grab;
+    }
+    .portfolio-shell.maximized #portfolio.dragging,
+    .portfolio-shell:-webkit-full-screen #portfolio.dragging,
+    .portfolio-shell:-moz-full-screen #portfolio.dragging,
+    .portfolio-shell:fullscreen #portfolio.dragging {
+      cursor: grabbing;
+    }
     
-    /* Floating controls in fullscreen */
-    .portfolio-shell.maximized .flip-controls,
-    .portfolio-shell:-webkit-full-screen .flip-controls,
-    .portfolio-shell:-moz-full-screen .flip-controls,
-    .portfolio-shell:fullscreen .flip-controls {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
+    /* Persistent controls - always on top */
+    .persistent-controls {
+      position: fixed !important;
+      bottom: 30px !important;
+      left: 50% !important;
       transform: translateX(-50%) !important;
-      z-index: 10001;
-      background: rgba(11, 15, 20, 0.95);
-      padding: 12px;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      z-index: 2147483647 !important;
+      background: rgba(0, 0, 0, 0.9) !important;
+      padding: 12px 16px !important;
+      border-radius: 12px !important;
+      backdrop-filter: blur(10px) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8) !important;
+      pointer-events: auto !important;
+      display: none;
+      gap: 10px !important;
+      align-items: center !important;
+    }
+    
+    .persistent-controls .icon-btn {
+      background: rgba(255, 255, 255, 0.1) !important;
+      z-index: 2147483647 !important;
+      pointer-events: auto !important;
+    }
+    
+    .persistent-controls .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* Show persistent controls only in fullscreen */
+    body.fullscreen-active .persistent-controls,
+    .portfolio-shell.maximized .persistent-controls {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    /* Normal controls below portfolio */
+    .flip-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    
+    /* Hide normal controls in fullscreen */
+    body.fullscreen-active .flip-controls,
+    .portfolio-shell.maximized .flip-controls {
+      display: none !important;
     }
     
     .portfolio-shell.maximized .note,
@@ -315,13 +405,13 @@
     }
     
     /* Fullscreen styles */
-    .portfolio-shell:-webkit-full-screen {
+    .portfolio-shell:-webkit-full-screen,
+    .portfolio-shell:-moz-full-screen,
+    .portfolio-shell:fullscreen {
       background: var(--bg);
-      padding: 20px;
-    }
-    .portfolio-shell:-moz-full-screen {
-      background: var(--bg);
-      padding: 20px;
+      padding: 0;
+      display: block;
+      overflow: auto;
     }
     .portfolio-shell:fullscreen {
       background: var(--bg);
@@ -329,22 +419,28 @@
     }
     
     #portfolio:-webkit-full-screen {
-      width: 100vw;
-      height: 100vh;
+      width: auto;
+      height: auto;
       max-width: none;
       max-height: none;
+      position: relative;
+      z-index: 1;
     }
     #portfolio:-moz-full-screen {
-      width: 100vw;
-      height: 100vh;
+      width: auto;
+      height: auto;
       max-width: none;
       max-height: none;
+      position: relative;
+      z-index: 1;
     }
     #portfolio:fullscreen {
-      width: 100vw;
-      height: 100vh;
+      width: auto;
+      height: auto;
       max-width: none;
       max-height: none;
+      position: relative;
+      z-index: 1;
     }
     
     /* Mobile maximize mode */
@@ -352,34 +448,25 @@
       position: fixed;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
+      width: 100vw;
+      height: 100vh;
       z-index: 9999;
-      background: var(--bg);
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      display: block;
       overflow: auto;
-      -webkit-overflow-scrolling: touch;
+    }
+    
+    body.fullscreen-active {
+      overflow: hidden;
     }
     
     .portfolio-shell.maximized #portfolio {
-      width: 100vw !important;
-      height: calc(100vw * 0.707) !important;
-      max-width: 100vw !important;
-      max-height: 100vh !important;
-      touch-action: pan-x pan-y pinch-zoom;
-      transform-origin: center center;
-    }
-    
-    @media (min-aspect-ratio: 1/1) {
-      .portfolio-shell.maximized #portfolio {
-        width: auto !important;
-        height: 100vh !important;
-        max-width: calc(100vh / 0.707) !important;
-      }
+      width: auto !important;
+      height: auto !important;
+      max-width: none !important;
+      max-height: none !important;
+      position: relative;
+      z-index: 1;
+      isolation: isolate;
     }
 
     .note { color: var(--muted); font-size: 13px; text-align: center; }
@@ -451,6 +538,23 @@
       <h2>Portfolio</h2>
       <p class="lead">Selected works: 2012 - 2023</p>
       <div class="portfolio-shell">
+        <!-- Persistent Controls (inside portfolio-shell for fullscreen) -->
+        <div id="persistent-controls" class="persistent-controls">
+          <button id="prev" class="icon-btn" aria-label="Previous page">&#8592;</button>
+          <button id="next" class="icon-btn" aria-label="Next page">&#8594;</button>
+          <button id="zoom-out" class="icon-btn" aria-label="Zoom out">
+            <i class="fas fa-search-minus"></i>
+          </button>
+          <button id="zoom-in" class="icon-btn" aria-label="Zoom in">
+            <i class="fas fa-search-plus"></i>
+          </button>
+          <button id="zoom-reset" class="icon-btn" aria-label="Reset zoom">
+            <i class="fas fa-compress-arrows-alt"></i>
+          </button>
+          <button id="fullscreen" class="icon-btn" aria-label="Toggle fullscreen">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
         <div id="portfolio">
           <div class="page" style="background-image:url('images/page001.jpg');"></div>
           <div class="page" style="background-image:url('images/page002.jpg');"></div>
@@ -532,15 +636,9 @@
           <div class="page" style="background-image:url('images/page078.jpg');"></div>
         </div>
         <div class="flip-controls">
-          <button id="prev" class="icon-btn" aria-label="Previous page">&#8592;</button>
-          <button id="next" class="icon-btn" aria-label="Next page">&#8594;</button>
-          <button id="zoom-out" class="icon-btn" aria-label="Zoom out">
-            <i class="fas fa-search-minus"></i>
-          </button>
-          <button id="zoom-in" class="icon-btn" aria-label="Zoom in">
-            <i class="fas fa-search-plus"></i>
-          </button>
-          <button id="fullscreen" class="icon-btn" aria-label="Toggle fullscreen">
+          <button class="icon-btn prev-btn" aria-label="Previous page">&#8592;</button>
+          <button class="icon-btn next-btn" aria-label="Next page">&#8594;</button>
+          <button class="icon-btn fullscreen-btn" aria-label="Toggle fullscreen">
             <i class="fas fa-expand"></i>
           </button>
         </div>
@@ -667,15 +765,26 @@
         // Disable drag cursor (removed to prevent zoom interference)
         $flip.css('cursor', 'default');
 
+        // Force remove Turn.js gutter on page turn and zoom
+        $flip.on('turned', function() {
+          $('#portfolio .turn-page').css({ marginLeft: 0, marginRight: 0 });
+        });
+        
+        // Initial gutter removal
+        $('#portfolio .turn-page').css({ marginLeft: 0, marginRight: 0 });
+        
         console.log('Portfolio initialized successfully!');
 
-        // Controls
-        const prev = document.getElementById('prev');
-        const next = document.getElementById('next');
-        if (prev && next) {
-          prev.addEventListener('click', function(){ $flip.turn('previous'); });
-          next.addEventListener('click', function(){ $flip.turn('next'); });
-        }
+        // Controls - both sets
+        const prevBtns = document.querySelectorAll('#prev, .prev-btn');
+        const nextBtns = document.querySelectorAll('#next, .next-btn');
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const zoomResetBtn = document.getElementById('zoom-reset');
+        const fullscreenBtns = document.querySelectorAll('#fullscreen, .fullscreen-btn');
+        
+        prevBtns.forEach(btn => btn.addEventListener('click', function(){ $flip.turn('previous'); }));
+        nextBtns.forEach(btn => btn.addEventListener('click', function(){ $flip.turn('next'); }));
 
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {
@@ -684,26 +793,151 @@
           if (e.key === 'f' || e.key === 'F') toggleFullscreen();
         });
 
-        // Zoom functionality
+        // Declare shared variables first
+        const portfolioShell = document.querySelector('.portfolio-shell');
+        let isMaximized = false;
         let currentZoom = 1;
-        const zoomInBtn = document.getElementById('zoom-in');
-        const zoomOutBtn = document.getElementById('zoom-out');
+        
+        // Pan functionality (auto-enabled in fullscreen)
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+        
+        // Pan drag handlers
+        $flip.on('mousedown', function(e) {
+          const inFullscreen = isMaximized || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          if (!inFullscreen) return;
+          console.log('Pan mousedown - inFullscreen:', inFullscreen, 'currentZoom:', currentZoom);
+          isDragging = true;
+          $flip.addClass('dragging');
+          startX = e.pageX;
+          startY = e.pageY;
+          scrollLeft = portfolioShell.scrollLeft;
+          scrollTop = portfolioShell.scrollTop;
+          e.preventDefault();
+        });
+        
+        $(document).on('mousemove', function(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          const walkX = (e.pageX - startX);
+          const walkY = (e.pageY - startY);
+          portfolioShell.scrollLeft = scrollLeft - walkX;
+          portfolioShell.scrollTop = scrollTop - walkY;
+          console.log('Panning - scrollLeft:', portfolioShell.scrollLeft, 'scrollTop:', portfolioShell.scrollTop);
+        });
+        
+        $(document).on('mouseup', function() {
+          if (isDragging) {
+            isDragging = false;
+            $flip.removeClass('dragging');
+          }
+        });
+        
+        // Touch support for pan
+        $flip.on('touchstart', function(e) {
+          const inFullscreen = isMaximized || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          if (!inFullscreen) return;
+          const touch = e.touches[0];
+          startX = touch.pageX;
+          startY = touch.pageY;
+          scrollLeft = portfolioShell.scrollLeft;
+          scrollTop = portfolioShell.scrollTop;
+        });
+        
+        $flip.on('touchmove', function(e) {
+          const inFullscreen = isMaximized || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          if (!inFullscreen) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          const walkX = (touch.pageX - startX);
+          const walkY = (touch.pageY - startY);
+          portfolioShell.scrollLeft = scrollLeft - walkX;
+          portfolioShell.scrollTop = scrollTop - walkY;
+        });
+        
+        // Zoom functionality
         
         function applyZoom(zoom) {
           currentZoom = Math.max(0.5, Math.min(3, zoom));
           const $portfolio = $('#portfolio');
-          $portfolio.css({
-            'transform': `scale(${currentZoom})`,
-            'transform-origin': 'center center',
-            'transition': 'transform 0.3s ease'
-          });
+          const inFullscreen = isMaximized || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
           
-          // Enable scrolling when zoomed in
-          if (currentZoom > 1) {
+          if (inFullscreen && currentZoom !== 1) {
+            // Get base dimensions
+            const baseWidth = window.innerWidth * 0.9;
+            const baseHeight = window.innerHeight * 0.9;
+            
+            // Calculate new dimensions based on zoom
+            const newWidth = baseWidth * currentZoom;
+            const newHeight = baseHeight * currentZoom;
+            
+            // Enable scrolling with padding for full access
             portfolioShell.style.overflow = 'auto';
+            portfolioShell.style.width = '100vw';
+            portfolioShell.style.height = '100vh';
+            portfolioShell.style.display = 'block';
+            
+            // Add equal padding on all sides for full access
+            const paddingH = newWidth * 0.5;
+            const paddingV = newHeight * 0.5;
+            $(portfolioShell).css({
+              'padding': `${paddingV}px ${paddingH}px`,
+              'box-sizing': 'content-box'
+            });
+            
+            // Resize portfolio directly (no transform scale)
+            $flip.turn('size', newWidth, newHeight);
+            
+            // Force remove Turn.js gutter after resize
+            setTimeout(() => {
+              $('#portfolio .turn-page').css({ marginLeft: 0, marginRight: 0 });
+            }, 50);
+            
+            // Ensure portfolio doesn't shrink
+            $portfolio.css({
+              'min-width': newWidth + 'px',
+              'min-height': newHeight + 'px',
+              'flex-shrink': '0'
+            });
+            
+            // Improve image quality when zoomed
+            $portfolio.find('.page').css({
+              'image-rendering': 'high-quality'
+            });
+            
+            // Center the zoomed content
+            setTimeout(() => {
+              portfolioShell.scrollLeft = (portfolioShell.scrollWidth - portfolioShell.clientWidth) / 2;
+              portfolioShell.scrollTop = (portfolioShell.scrollHeight - portfolioShell.clientHeight) / 2;
+              console.log('Zoom centered - newW:', newWidth, 'newH:', newHeight, 'paddingH:', paddingH, 'paddingV:', paddingV, 'scrollWidth:', portfolioShell.scrollWidth, 'scrollHeight:', portfolioShell.scrollHeight);
+            }, 100);
+            
+            console.log('Zoom applied via resize - zoom:', currentZoom, 'newW:', newWidth, 'newH:', newHeight);
           } else {
-            portfolioShell.style.overflow = isMaximized ? 'auto' : '';
+            // Reset to normal size
+            if (inFullscreen) {
+              const w = window.innerWidth * 0.9;
+              const h = window.innerHeight * 0.9;
+              $flip.turn('size', w, h);
+              portfolioShell.style.overflow = 'auto';
+              $(portfolioShell).css({
+                'padding': '0',
+                'display': 'flex',
+                'alignItems': 'center',
+                'justifyContent': 'center'
+              });
+              $portfolio.css({
+                'min-width': '',
+                'min-height': '',
+                'flex-shrink': ''
+              });
+            }
+            $portfolio.find('.page').css({
+              'image-rendering': 'auto'
+            });
           }
+          
+          console.log('Zoom applied:', currentZoom);
         }
         
         if (zoomInBtn) {
@@ -720,10 +954,14 @@
           });
         }
         
+        if (zoomResetBtn) {
+          zoomResetBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            applyZoom(1);
+          });
+        }
+        
         // Fullscreen functionality
-        const fullscreenBtn = document.getElementById('fullscreen');
-        const portfolioShell = document.querySelector('.portfolio-shell');
-        let isMaximized = false;
         
         function toggleFullscreen() {
           // Check if browser supports fullscreen API
@@ -755,31 +993,53 @@
             isMaximized = !isMaximized;
             if (isMaximized) {
               portfolioShell.classList.add('maximized');
-              document.body.style.overflow = 'hidden';
+              document.body.classList.add('fullscreen-active');
+              // Show persistent controls
+              const persistentControls = document.getElementById('persistent-controls');
+              console.log('Entering fullscreen - persistentControls found:', persistentControls);
+              if (persistentControls) {
+                persistentControls.style.display = 'flex';
+                persistentControls.style.visibility = 'visible';
+                persistentControls.style.opacity = '1';
+                console.log('Persistent controls display set to:', persistentControls.style.display);
+              }
               // Reset zoom when entering fullscreen
               currentZoom = 1;
               $flip.css('transform', 'scale(1)');
-              // Recalculate portfolio size with proper aspect ratio
-              const viewportWidth = window.innerWidth;
-              const viewportHeight = window.innerHeight;
-              const widthBasedHeight = viewportWidth * 0.707;
-              const heightBasedWidth = viewportHeight / 0.707;
-              
-              let w, h;
-              if (widthBasedHeight <= viewportHeight) {
-                w = viewportWidth;
-                h = widthBasedHeight;
-              } else {
-                w = heightBasedWidth;
-                h = viewportHeight;
-              }
+              // Set portfolio to 90vw x 90vh
+              const w = window.innerWidth * 0.9;
+              const h = window.innerHeight * 0.9;
               $flip.turn('size', w, h);
             } else {
               portfolioShell.classList.remove('maximized');
-              document.body.style.overflow = '';
-              // Reset zoom when exiting fullscreen
+              document.body.classList.remove('fullscreen-active');
+              // Hide persistent controls
+              const persistentControls = document.getElementById('persistent-controls');
+              console.log('Exiting fullscreen');
+              if (persistentControls) persistentControls.style.display = 'none';
+              // Reset zoom and all container styles when exiting fullscreen
               currentZoom = 1;
-              $flip.css('transform', 'scale(1)');
+              
+              // Reset all styles
+              $(portfolioShell).css({
+                'padding': '',
+                'width': '',
+                'height': '',
+                'display': '',
+                'alignItems': '',
+                'justifyContent': ''
+              });
+              portfolioShell.style.overflow = '';
+              portfolioShell.style.width = '';
+              portfolioShell.style.height = '';
+              portfolioShell.style.display = '';
+              
+              $('#portfolio').css({
+                'min-width': '',
+                'min-height': '',
+                'flex-shrink': ''
+              });
+              
               // Restore original size
               const viewportWidth = window.innerWidth * 0.95;
               const viewportHeight = window.innerHeight * 0.85;
@@ -793,26 +1053,92 @@
           }
         }
         
-        if (fullscreenBtn) {
-          fullscreenBtn.addEventListener('click', toggleFullscreen);
-        }
+        fullscreenBtns.forEach(btn => {
+          btn.addEventListener('click', toggleFullscreen);
+        });
         
         // Update icon when entering/exiting fullscreen
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
-        document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('fullscreenchange', function() {
+          updateFullscreenIcon();
+          togglePersistentControls();
+        });
+        document.addEventListener('webkitfullscreenchange', function() {
+          updateFullscreenIcon();
+          togglePersistentControls();
+        });
+        document.addEventListener('mozfullscreenchange', function() {
+          updateFullscreenIcon();
+          togglePersistentControls();
+        });
+        
+        function togglePersistentControls() {
+          const persistentControls = document.getElementById('persistent-controls');
+          const normalControls = document.querySelector('.flip-controls');
+          const inFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          console.log('togglePersistentControls - inFullscreen:', !!inFullscreen, 'persistentControls:', persistentControls);
+          if (persistentControls) {
+            if (inFullscreen) {
+              persistentControls.style.display = 'flex';
+              persistentControls.style.visibility = 'visible';
+              persistentControls.style.opacity = '1';
+              if (normalControls) normalControls.style.display = 'none';
+              console.log('Showing persistent controls, hiding normal controls');
+            } else {
+              // Reset zoom and all container styles before hiding persistent controls
+              currentZoom = 1;
+              const $portfolio = $('#portfolio');
+              
+              // Restore original portfolio size
+              const viewportWidth = window.innerWidth * 0.95;
+              const viewportHeight = window.innerHeight * 0.85;
+              const widthBasedHeight = viewportWidth * 0.707;
+              const heightBasedWidth = viewportHeight / 0.707;
+              const w = widthBasedHeight <= viewportHeight ? viewportWidth : heightBasedWidth;
+              const h = widthBasedHeight <= viewportHeight ? widthBasedHeight : viewportHeight;
+              $flip.turn('size', w, h);
+              
+              // Reset all styles
+              $(portfolioShell).css({
+                'padding': '',
+                'width': '',
+                'height': '',
+                'display': '',
+                'alignItems': '',
+                'justifyContent': ''
+              });
+              portfolioShell.style.overflow = '';
+              portfolioShell.style.width = '';
+              portfolioShell.style.height = '';
+              portfolioShell.style.display = '';
+              
+              $portfolio.css({
+                'min-width': '',
+                'min-height': '',
+                'flex-shrink': ''
+              });
+              
+              persistentControls.style.display = 'none';
+              if (normalControls) normalControls.style.display = 'flex';
+              console.log('Hiding persistent controls, showing normal controls, zoom and size fully reset');
+            }
+          }
+        }
         
         function updateFullscreenIcon() {
-          const icon = fullscreenBtn.querySelector('i');
           const inFullscreen = document.fullscreenElement || document.webkitFullscreenElement || 
                               document.mozFullScreenElement || isMaximized;
-          if (inFullscreen) {
-            icon.className = 'fas fa-compress';
-            fullscreenBtn.setAttribute('aria-label', 'Exit fullscreen');
-          } else {
-            icon.className = 'fas fa-expand';
-            fullscreenBtn.setAttribute('aria-label', 'Enter fullscreen');
-          }
+          fullscreenBtns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (icon) {
+              if (inFullscreen) {
+                icon.className = 'fas fa-compress';
+                btn.setAttribute('aria-label', 'Exit fullscreen');
+              } else {
+                icon.className = 'fas fa-expand';
+                btn.setAttribute('aria-label', 'Enter fullscreen');
+              }
+            }
+          });
         }
 
         // Resize handling
