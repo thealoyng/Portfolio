@@ -270,7 +270,7 @@
     }
 
     #portfolio .page {
-      background-color: #000;
+      background-color: transparent;
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
@@ -306,19 +306,44 @@
       margin: 0 !important;
     }
     
-    /* Ensure pages are flush together */
-    .portfolio-shell:-webkit-full-screen #portfolio .even,
-    .portfolio-shell:-moz-full-screen #portfolio .even,
-    .portfolio-shell:fullscreen #portfolio .even,
-    .portfolio-shell.maximized #portfolio .even {
-      margin-right: 0 !important;
+    /* Aggressively force pages together with negative margins */
+    .portfolio-shell:-webkit-full-screen #portfolio .turn-page:nth-child(even),
+    .portfolio-shell:-moz-full-screen #portfolio .turn-page:nth-child(even),
+    .portfolio-shell:fullscreen #portfolio .turn-page:nth-child(even),
+    .portfolio-shell.maximized #portfolio .turn-page:nth-child(even) {
+      margin-right: -2px !important;
     }
     
-    .portfolio-shell:-webkit-full-screen #portfolio .odd,
-    .portfolio-shell:-moz-full-screen #portfolio .odd,
-    .portfolio-shell:fullscreen #portfolio .odd,
-    .portfolio-shell.maximized #portfolio .odd {
-      margin-left: 0 !important;
+    .portfolio-shell:-webkit-full-screen #portfolio .turn-page:nth-child(odd),
+    .portfolio-shell:-moz-full-screen #portfolio .turn-page:nth-child(odd),
+    .portfolio-shell:fullscreen #portfolio .turn-page:nth-child(odd),
+    .portfolio-shell.maximized #portfolio .turn-page:nth-child(odd) {
+      margin-left: -2px !important;
+    }
+    
+    /* Override Turn.js internal positioning */
+    .portfolio-shell:-webkit-full-screen #portfolio > div,
+    .portfolio-shell:-moz-full-screen #portfolio > div,
+    .portfolio-shell:fullscreen #portfolio > div,
+    .portfolio-shell.maximized #portfolio > div {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    /* When zoomed, ensure pages fill completely with no gaps */
+    .portfolio-shell.zoomed #portfolio .page,
+    .portfolio-shell:-webkit-full-screen.zoomed #portfolio .page,
+    .portfolio-shell:-moz-full-screen.zoomed #portfolio .page,
+    .portfolio-shell:fullscreen.zoomed #portfolio .page {
+      background-size: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    /* Additional zoom state styles */
+    .portfolio-shell.zoomed #portfolio,
+    body.zoomed #portfolio {
+      background: #000 !important;
     }
 
     .icon-btn {
@@ -408,14 +433,10 @@
     .portfolio-shell:-webkit-full-screen,
     .portfolio-shell:-moz-full-screen,
     .portfolio-shell:fullscreen {
-      background: var(--bg);
+      background: transparent !important;
       padding: 0;
       display: block;
       overflow: auto;
-    }
-    .portfolio-shell:fullscreen {
-      background: var(--bg);
-      padding: 20px;
     }
     
     #portfolio:-webkit-full-screen {
@@ -453,6 +474,7 @@
       z-index: 9999;
       display: block;
       overflow: auto;
+      background: transparent !important;
     }
     
     body.fullscreen-active {
@@ -863,40 +885,41 @@
           const inFullscreen = isMaximized || document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
           
           if (inFullscreen && currentZoom !== 1) {
-            // Get base dimensions
-            const baseWidth = window.innerWidth * 0.9;
-            const baseHeight = window.innerHeight * 0.9;
+            // Add zoomed class to activate CSS rules
+            portfolioShell.classList.add('zoomed');
+            document.body.classList.add('zoomed');
             
-            // Calculate new dimensions based on zoom
-            const newWidth = baseWidth * currentZoom;
-            const newHeight = baseHeight * currentZoom;
+            // Get current portfolio dimensions
+            const portfolioWidth = $portfolio.outerWidth();
+            const portfolioHeight = $portfolio.outerHeight();
             
-            // Enable scrolling with padding for full access
+            // Apply CSS transform scale
+            $portfolio.css({
+              'transform': `scale(${currentZoom})`,
+              'transform-origin': 'top left',
+              'transition': 'transform 0.3s ease'
+            });
+            
+            // Set up scrollable container - NO PADDING
             portfolioShell.style.overflow = 'auto';
             portfolioShell.style.width = '100vw';
             portfolioShell.style.height = '100vh';
-            portfolioShell.style.display = 'block';
+            portfolioShell.style.display = 'flex';
+            portfolioShell.style.alignItems = 'flex-start';
+            portfolioShell.style.justifyContent = 'flex-start';
             
-            // Add equal padding on all sides for full access
-            const paddingH = newWidth * 0.5;
-            const paddingV = newHeight * 0.5;
+            // Remove all padding
             $(portfolioShell).css({
-              'padding': `${paddingV}px ${paddingH}px`,
-              'box-sizing': 'content-box'
+              'padding': '0',
+              'box-sizing': 'border-box'
             });
             
-            // Resize portfolio directly (no transform scale)
-            $flip.turn('size', newWidth, newHeight);
-            
-            // Force remove Turn.js gutter after resize
-            setTimeout(() => {
-              $('#portfolio .turn-page').css({ marginLeft: 0, marginRight: 0 });
-            }, 50);
-            
-            // Ensure portfolio doesn't shrink
+            // Make portfolio take up scaled space for scrolling
+            const scaledWidth = portfolioWidth * currentZoom;
+            const scaledHeight = portfolioHeight * currentZoom;
             $portfolio.css({
-              'min-width': newWidth + 'px',
-              'min-height': newHeight + 'px',
+              'min-width': `${portfolioWidth}px`,
+              'min-height': `${portfolioHeight}px`,
               'flex-shrink': '0'
             });
             
@@ -905,33 +928,35 @@
               'image-rendering': 'high-quality'
             });
             
-            // Center the zoomed content
-            setTimeout(() => {
-              portfolioShell.scrollLeft = (portfolioShell.scrollWidth - portfolioShell.clientWidth) / 2;
-              portfolioShell.scrollTop = (portfolioShell.scrollHeight - portfolioShell.clientHeight) / 2;
-              console.log('Zoom centered - newW:', newWidth, 'newH:', newHeight, 'paddingH:', paddingH, 'paddingV:', paddingV, 'scrollWidth:', portfolioShell.scrollWidth, 'scrollHeight:', portfolioShell.scrollHeight);
-            }, 100);
-            
-            console.log('Zoom applied via resize - zoom:', currentZoom, 'newW:', newWidth, 'newH:', newHeight);
+            console.log('Zoom applied via CSS transform - zoom:', currentZoom, 'dimensions:', portfolioWidth, 'x', portfolioHeight);
           } else {
-            // Reset to normal size
+            // Remove zoomed class
+            portfolioShell.classList.remove('zoomed');
+            document.body.classList.remove('zoomed');
+            
+            // Reset transform
+            $portfolio.css({
+              'transform': 'scale(1)',
+              'transform-origin': 'center center',
+              'transition': 'transform 0.3s ease'
+            });
+            
             if (inFullscreen) {
-              const w = window.innerWidth * 0.9;
-              const h = window.innerHeight * 0.9;
-              $flip.turn('size', w, h);
               portfolioShell.style.overflow = 'auto';
+              portfolioShell.style.display = 'flex';
+              portfolioShell.style.alignItems = 'center';
+              portfolioShell.style.justifyContent = 'center';
               $(portfolioShell).css({
-                'padding': '0',
-                'display': 'flex',
-                'alignItems': 'center',
-                'justifyContent': 'center'
-              });
-              $portfolio.css({
-                'min-width': '',
-                'min-height': '',
-                'flex-shrink': ''
+                'padding': '0'
               });
             }
+            
+            $portfolio.css({
+              'min-width': '',
+              'min-height': '',
+              'flex-shrink': ''
+            });
+            
             $portfolio.find('.page').css({
               'image-rendering': 'auto'
             });
@@ -1017,10 +1042,28 @@
               const persistentControls = document.getElementById('persistent-controls');
               console.log('Exiting fullscreen');
               if (persistentControls) persistentControls.style.display = 'none';
-              // Reset zoom and all container styles when exiting fullscreen
-              currentZoom = 1;
               
-              // Reset all styles
+              // Reset zoom completely
+              currentZoom = 1;
+              portfolioShell.classList.remove('zoomed');
+              document.body.classList.remove('zoomed');
+              
+              // Reset transform and all portfolio styles
+              $flip.css({
+                'transform': 'scale(1)',
+                'transform-origin': 'center center',
+                'min-width': '',
+                'min-height': '',
+                'flex-shrink': ''
+              });
+              
+              // Reset page styles
+              $flip.find('.page').css({
+                'image-rendering': 'auto',
+                'background-size': 'contain'
+              });
+              
+              // Reset all container styles
               $(portfolioShell).css({
                 'padding': '',
                 'width': '',
@@ -1033,12 +1076,6 @@
               portfolioShell.style.width = '';
               portfolioShell.style.height = '';
               portfolioShell.style.display = '';
-              
-              $('#portfolio').css({
-                'min-width': '',
-                'min-height': '',
-                'flex-shrink': ''
-              });
               
               // Restore original size
               const viewportWidth = window.innerWidth * 0.95;
@@ -1086,7 +1123,25 @@
             } else {
               // Reset zoom and all container styles before hiding persistent controls
               currentZoom = 1;
+              portfolioShell.classList.remove('zoomed');
+              document.body.classList.remove('zoomed');
+              
               const $portfolio = $('#portfolio');
+              
+              // Reset transform and all portfolio styles
+              $portfolio.css({
+                'transform': 'scale(1)',
+                'transform-origin': 'center center',
+                'min-width': '',
+                'min-height': '',
+                'flex-shrink': ''
+              });
+              
+              // Reset page styles
+              $portfolio.find('.page').css({
+                'image-rendering': 'auto',
+                'background-size': 'contain'
+              });
               
               // Restore original portfolio size
               const viewportWidth = window.innerWidth * 0.95;
@@ -1097,7 +1152,7 @@
               const h = widthBasedHeight <= viewportHeight ? widthBasedHeight : viewportHeight;
               $flip.turn('size', w, h);
               
-              // Reset all styles
+              // Reset all container styles
               $(portfolioShell).css({
                 'padding': '',
                 'width': '',
@@ -1110,12 +1165,6 @@
               portfolioShell.style.width = '';
               portfolioShell.style.height = '';
               portfolioShell.style.display = '';
-              
-              $portfolio.css({
-                'min-width': '',
-                'min-height': '',
-                'flex-shrink': ''
-              });
               
               persistentControls.style.display = 'none';
               if (normalControls) normalControls.style.display = 'flex';
