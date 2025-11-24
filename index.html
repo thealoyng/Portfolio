@@ -503,8 +503,8 @@
     }
     
     .portfolio-shell.maximized #portfolio {
-      width: min(90vw, calc(90vh / 0.707)) !important;
-      height: min(calc(90vw * 0.707), 90vh) !important;
+      width: min(100vw, calc(100vh / 0.707)) !important;
+      height: min(calc(100vw * 0.707), 100vh) !important;
       max-width: 100vw !important;
       max-height: 100vh !important;
       position: relative;
@@ -521,8 +521,8 @@
       
       /* When zoomed, use fixed dimensions for scaling */
       .portfolio-shell.maximized.zoomed #portfolio {
-        width: min(90vw, calc(90vh / 0.707)) !important;
-        height: min(calc(90vw * 0.707), 90vh) !important;
+        width: min(100vw, calc(100vh / 0.707)) !important;
+        height: min(calc(100vw * 0.707), 100vh) !important;
       }
       
       .portfolio-shell.maximized.zoomed {
@@ -600,7 +600,7 @@
   <section id="portfolio-section" class="section">
     <div class="wrap">
       <h2>Portfolio</h2>
-      <p class="lead">Selected works: 2012 - 2023</p>
+      <p class="lead">Selected works: 2012 - 2023<br/>(Best viewed in web format)</p>
       <div class="portfolio-shell">
         <!-- Persistent Controls (inside portfolio-shell for fullscreen) -->
         <div id="persistent-controls" class="persistent-controls">
@@ -1086,19 +1086,19 @@
                 'transform-origin': 'center center'
               });
               
-              // Mobile: calculate size to fit within viewport
-              const vw = window.innerWidth * 0.9;
-              const vh = window.innerHeight * 0.9;
+              // Mobile: calculate size to fit entire viewport (edge-to-edge)
+              const vw = window.innerWidth;
+              const vh = window.innerHeight;
               const aspectRatio = 0.707; // A4 aspect ratio (height/width)
               
               // Determine constraining dimension
               let w, h;
               if (vw * aspectRatio <= vh) {
-                // Width-constrained
+                // Width-constrained: sides touch screen edges
                 w = vw;
                 h = vw * aspectRatio;
               } else {
-                // Height-constrained
+                // Height-constrained: top/bottom touch screen edges
                 h = vh;
                 w = vh / aspectRatio;
               }
