@@ -486,8 +486,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: auto;
+      overflow: hidden;
       background: #000 !important;
+    }
+    
+    /* Enable overflow only when zoomed */
+    .portfolio-shell.maximized.zoomed {
+      overflow: auto;
     }
     
     body.fullscreen-active {
@@ -498,10 +503,10 @@
     }
     
     .portfolio-shell.maximized #portfolio {
-      width: 90vw !important;
-      height: calc(90vw * 0.707) !important;
-      max-width: 90vw !important;
-      max-height: 90vh !important;
+      width: min(90vw, calc(90vh / 0.707)) !important;
+      height: min(calc(90vw * 0.707), 90vh) !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
       position: relative;
       z-index: 1;
       isolation: isolate;
@@ -514,15 +519,17 @@
         transform-origin: center center !important;
       }
       
+      /* When zoomed, use fixed dimensions for scaling */
       .portfolio-shell.maximized.zoomed #portfolio {
-        width: 90vw !important;
-        height: calc(90vw * 0.707) !important;
+        width: min(90vw, calc(90vh / 0.707)) !important;
+        height: min(calc(90vw * 0.707), 90vh) !important;
       }
       
       .portfolio-shell.maximized.zoomed {
         display: block !important;
         align-items: flex-start !important;
         justify-content: flex-start !important;
+        padding: 0 !important;
       }
     }
 
@@ -1070,12 +1077,25 @@
                 'transform-origin': 'center center'
               });
               
-              // Mobile: calculate size based on viewport width (portrait-oriented)
-              const w = window.innerWidth * 0.9;
-              const h = w * 0.707; // A4 aspect ratio
-              $flip.turn('size', w, h);
+              // Mobile: calculate size to fit within viewport
+              const vw = window.innerWidth * 0.9;
+              const vh = window.innerHeight * 0.9;
+              const aspectRatio = 0.707; // A4 aspect ratio (height/width)
               
-              console.log('Mobile fullscreen - size:', w, 'x', h);
+              // Determine constraining dimension
+              let w, h;
+              if (vw * aspectRatio <= vh) {
+                // Width-constrained
+                w = vw;
+                h = vw * aspectRatio;
+              } else {
+                // Height-constrained
+                h = vh;
+                w = vh / aspectRatio;
+              }
+              
+              $flip.turn('size', w, h);
+              console.log('Mobile fullscreen - size:', w, 'x', h, 'viewport:', window.innerWidth, 'x', window.innerHeight);
             } else {
               portfolioShell.classList.remove('maximized');
               document.body.classList.remove('fullscreen-active');
