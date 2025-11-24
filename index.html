@@ -282,6 +282,42 @@
       color: var(--text);
     }
     .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .icon-btn:hover:not(:disabled) { 
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+    }
+    
+    /* Fullscreen styles */
+    .portfolio-shell:-webkit-full-screen {
+      background: var(--bg);
+      padding: 20px;
+    }
+    .portfolio-shell:-moz-full-screen {
+      background: var(--bg);
+      padding: 20px;
+    }
+    .portfolio-shell:fullscreen {
+      background: var(--bg);
+      padding: 20px;
+    }
+    
+    #portfolio:-webkit-full-screen {
+      width: 95vw;
+      height: 95vh;
+      max-width: none;
+      max-height: none;
+    }
+    #portfolio:-moz-full-screen {
+      width: 95vw;
+      height: 95vh;
+      max-width: none;
+      max-height: none;
+    }
+    #portfolio:fullscreen {
+      width: 95vw;
+      height: 95vh;
+      max-width: none;
+      max-height: none;
+    }
 
     .note { color: var(--muted); font-size: 13px; text-align: center; }
 
@@ -433,6 +469,9 @@
         <div class="flip-controls">
           <button id="prev" class="icon-btn" aria-label="Previous page">&#8592;</button>
           <button id="next" class="icon-btn" aria-label="Next page">&#8594;</button>
+          <button id="fullscreen" class="icon-btn" aria-label="Toggle fullscreen">
+            <i class="fas fa-expand"></i>
+          </button>
         </div>
         <p class="note">Use arrow keys or buttons to navigate.</p>
       </div>
@@ -575,7 +614,58 @@
         document.addEventListener('keydown', function(e) {
           if (e.key === 'ArrowLeft') $flip.turn('previous');
           if (e.key === 'ArrowRight') $flip.turn('next');
+          if (e.key === 'f' || e.key === 'F') toggleFullscreen();
         });
+
+        // Fullscreen functionality
+        const fullscreenBtn = document.getElementById('fullscreen');
+        const portfolioShell = document.querySelector('.portfolio-shell');
+        
+        function toggleFullscreen() {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
+            // Enter fullscreen
+            if (portfolioShell.requestFullscreen) {
+              portfolioShell.requestFullscreen();
+            } else if (portfolioShell.webkitRequestFullscreen) {
+              portfolioShell.webkitRequestFullscreen();
+            } else if (portfolioShell.mozRequestFullScreen) {
+              portfolioShell.mozRequestFullScreen();
+            } else if (portfolioShell.msRequestFullscreen) {
+              portfolioShell.msRequestFullscreen();
+            }
+          } else {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+              document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+              document.msExitFullscreen();
+            }
+          }
+        }
+        
+        if (fullscreenBtn) {
+          fullscreenBtn.addEventListener('click', toggleFullscreen);
+        }
+        
+        // Update icon when entering/exiting fullscreen
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+        
+        function updateFullscreenIcon() {
+          const icon = fullscreenBtn.querySelector('i');
+          if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+            icon.className = 'fas fa-compress';
+            fullscreenBtn.setAttribute('aria-label', 'Exit fullscreen');
+          } else {
+            icon.className = 'fas fa-expand';
+            fullscreenBtn.setAttribute('aria-label', 'Enter fullscreen');
+          }
+        }
 
         // Resize handling
         window.addEventListener('resize', function() {
