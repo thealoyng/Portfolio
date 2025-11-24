@@ -1,0 +1,9 @@
+# Exclude backup and temporary folders
+JPG_Portfolio/
+split_pages/
+utility/
+test.html
+
+# System files
+.DS_Store
+Thumbs.db
