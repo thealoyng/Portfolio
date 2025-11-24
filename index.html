@@ -313,23 +313,22 @@
     .portfolio-shell:-webkit-full-screen #portfolio .turn-page,
     .portfolio-shell:-moz-full-screen #portfolio .turn-page,
     .portfolio-shell:fullscreen #portfolio .turn-page,
-    .portfolio-shell.maximized #portfolio .turn-page {
+    .portfolio-shell.maximized #portfolio .turn-page,
+    body.fullscreen-active #portfolio .turn-page {
       margin: 0 !important;
+      padding: 0 !important;
     }
     
-    /* Aggressively force pages together with negative margins */
-    .portfolio-shell:-webkit-full-screen #portfolio .turn-page:nth-child(even),
-    .portfolio-shell:-moz-full-screen #portfolio .turn-page:nth-child(even),
-    .portfolio-shell:fullscreen #portfolio .turn-page:nth-child(even),
-    .portfolio-shell.maximized #portfolio .turn-page:nth-child(even) {
-      margin-right: -2px !important;
-    }
-    
-    .portfolio-shell:-webkit-full-screen #portfolio .turn-page:nth-child(odd),
-    .portfolio-shell:-moz-full-screen #portfolio .turn-page:nth-child(odd),
-    .portfolio-shell:fullscreen #portfolio .turn-page:nth-child(odd),
-    .portfolio-shell.maximized #portfolio .turn-page:nth-child(odd) {
-      margin-left: -2px !important;
+    /* Force pages flush together - no gaps */
+    .portfolio-shell:-webkit-full-screen #portfolio .turn-page,
+    .portfolio-shell:-moz-full-screen #portfolio .turn-page,
+    .portfolio-shell:fullscreen #portfolio .turn-page,
+    .portfolio-shell.maximized #portfolio .turn-page,
+    body.fullscreen-active #portfolio .turn-page {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      border: none !important;
+      gap: 0 !important;
     }
     
     /* Override Turn.js internal positioning */
@@ -829,9 +828,51 @@
         // Disable drag cursor (removed to prevent zoom interference)
         $flip.css('cursor', 'default');
 
-        // Force remove Turn.js gutter on page turn and zoom
+        // Force remove Turn.js gutter on page turn
+        $flip.on('turning', function() {
+          isTurning = true;
+          
+          // Immediately force remove margins as Turn.js tries to add them during flip
+          const inFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                              document.mozFullScreenElement || isMaximized);
+          
+          if (inFullscreen) {
+            setTimeout(function() {
+              $('#portfolio .turn-page').css({ 
+                margin: '0 !important',
+                padding: '0 !important',
+                marginLeft: '0 !important',
+                marginRight: '0 !important'
+              });
+            }, 10);
+          }
+        });
+        
         $flip.on('turned', function() {
-          $('#portfolio .turn-page').css({ marginLeft: 0, marginRight: 0 });
+          const inFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                              document.mozFullScreenElement || isMaximized);
+          
+          // Always remove margins
+          $('#portfolio .turn-page').css({ 
+            marginLeft: 0, 
+            marginRight: 0,
+            marginTop: 0,
+            marginBottom: 0
+          });
+          
+          // In fullscreen, be extra aggressive
+          if (inFullscreen) {
+            $('#portfolio .turn-page').css({ 
+              margin: '0',
+              padding: '0',
+              border: 'none',
+              gap: '0'
+            });
+          }
+          
+          setTimeout(function() {
+            isTurning = false;
+          }, 100);
         });
         
         // Initial gutter removal
@@ -861,6 +902,7 @@
         const portfolioShell = document.querySelector('.portfolio-shell');
         let isMaximized = false;
         let currentZoom = 1;
+        let isTurning = false;
         
         // Pan functionality (auto-enabled in fullscreen)
         let isDragging = false;
@@ -1048,6 +1090,9 @@
           if (supportsFullscreen && window.innerWidth > 768) {
             // Desktop: use native fullscreen API
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
+              // Entering fullscreen
+              document.body.classList.add('fullscreen-active');
+              
               if (portfolioShell.requestFullscreen) {
                 portfolioShell.requestFullscreen();
               } else if (portfolioShell.webkitRequestFullscreen) {
@@ -1055,7 +1100,59 @@
               } else if (portfolioShell.mozRequestFullScreen) {
                 portfolioShell.mozRequestFullScreen();
               }
+              
+              // Wait for fullscreen to activate, then resize
+              setTimeout(function() {
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const aspectRatio = 0.707;
+                
+                let w, h;
+                const heightBasedWidth = vh / aspectRatio;
+                const widthBasedHeight = vw * aspectRatio;
+                
+                if (widthBasedHeight <= vh) {
+                  // Width-constrained: use full width (subtract for Turn.js double-page gutter)
+                  w = vw - 90; // Account for internal Turn.js spacing between pages
+                  h = widthBasedHeight;
+                } else {
+                  // Height-constrained: use full height (subtract for Turn.js double-page gutter)
+                  h = vh;
+                  w = heightBasedWidth - 90; // Account for internal Turn.js spacing between pages
+                }
+                
+                console.log('Desktop fullscreen - calculated dimensions:', w, 'x', h, 'viewport:', vw, 'x', vh);
+                
+                // Set both Turn.js size AND container CSS dimensions
+                $flip.turn('size', w, h);
+                $flip.css({
+                  'width': w + 'px',
+                  'height': h + 'px',
+                  'max-width': 'none',
+                  'max-height': 'none',
+                  'margin': '0',
+                  'padding': '0'
+                });
+                
+                // Force remove all margins on turn pages
+                setTimeout(function() {
+                  $('#portfolio .turn-page').css({ 
+                    marginLeft: 0, 
+                    marginRight: 0,
+                    marginTop: 0,
+                    marginBottom: 0,
+                    padding: 0
+                  });
+                }, 50);
+                
+                // Ensure portfolio-shell has no constraints
+                portfolioShell.style.padding = '0';
+                portfolioShell.style.margin = '0';
+              }, 100);
             } else {
+              // Exiting fullscreen
+              document.body.classList.remove('fullscreen-active');
+              
               if (document.exitFullscreen) {
                 document.exitFullscreen();
               } else if (document.webkitExitFullscreen) {
@@ -1166,14 +1263,26 @@
         
         // Update icon when entering/exiting fullscreen
         document.addEventListener('fullscreenchange', function() {
+          const inFullscreen = document.fullscreenElement;
+          if (!inFullscreen) {
+            document.body.classList.remove('fullscreen-active');
+          }
           updateFullscreenIcon();
           togglePersistentControls();
         });
         document.addEventListener('webkitfullscreenchange', function() {
+          const inFullscreen = document.webkitFullscreenElement;
+          if (!inFullscreen) {
+            document.body.classList.remove('fullscreen-active');
+          }
           updateFullscreenIcon();
           togglePersistentControls();
         });
         document.addEventListener('mozfullscreenchange', function() {
+          const inFullscreen = document.mozFullScreenElement;
+          if (!inFullscreen) {
+            document.body.classList.remove('fullscreen-active');
+          }
           updateFullscreenIcon();
           togglePersistentControls();
         });
@@ -1262,20 +1371,49 @@
 
         // Resize handling
         window.addEventListener('resize', function() {
-          var viewportWidth = window.innerWidth * 0.95;
-          var viewportHeight = window.innerHeight * 0.85;
-          var widthBasedHeight = viewportWidth * 0.707;
-          var heightBasedWidth = viewportHeight / 0.707;
+          // Skip resize if we're in the middle of a page turn
+          if (isTurning) return;
+          
+          // Check if we're in fullscreen mode
+          const inFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                              document.mozFullScreenElement || isMaximized);
           
           var w, h;
-          if (widthBasedHeight <= viewportHeight) {
-            w = viewportWidth;
-            h = widthBasedHeight;
+          
+          if (inFullscreen) {
+            // In fullscreen: use full viewport dimensions
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const aspectRatio = 0.707;
+            
+            if (vw * aspectRatio <= vh) {
+              w = vw;
+              h = vw * aspectRatio;
+            } else {
+              h = vh;
+              w = vh / aspectRatio;
+            }
           } else {
-            w = heightBasedWidth;
-            h = viewportHeight;
+            // Not in fullscreen: use constrained dimensions
+            var viewportWidth = window.innerWidth * 0.95;
+            var viewportHeight = window.innerHeight * 0.85;
+            var widthBasedHeight = viewportWidth * 0.707;
+            var heightBasedWidth = viewportHeight / 0.707;
+            
+            if (widthBasedHeight <= viewportHeight) {
+              w = viewportWidth;
+              h = widthBasedHeight;
+            } else {
+              w = heightBasedWidth;
+              h = viewportHeight;
+            }
           }
+          
           $flip.turn('size', w, h);
+          $flip.css({
+            'width': w + 'px',
+            'height': h + 'px'
+          });
         });
       } catch (error) {
         console.error('Error initializing portfolio:', error);
